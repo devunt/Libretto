@@ -11,14 +11,14 @@ int APIENTRY WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	CoInitialize(nullptr);
+	// CoInitialize(nullptr);
 
 	MainWindow mainWindow;
 	mainWindow.initialize(hInstance);
 
 	const auto ret = mainWindow.runMessageLoop();
 
-	CoUninitialize();
+	// CoUninitialize();
 	return ret;
 }
 

@@ -1,22 +1,8 @@
 #pragma once
 
 #include <Windows.h>
-#include <d2d1.h>
-#include <dwrite.h>
-
-#pragma comment(lib, "d2d1")
-#pragma comment(lib, "dwrite")
-
-template<class Interface>
-void safeRelease(Interface** ppInterfaceToRelease)
-{
-	if (*ppInterfaceToRelease != NULL)
-	{
-		(*ppInterfaceToRelease)->Release();
-
-		(*ppInterfaceToRelease) = NULL;
-	}
-}
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus")
 
 class MainWindow
 {
@@ -29,12 +15,9 @@ public:
 	LRESULT wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
-	void createDeviceIndependentResources();
-	void createDeviceResources();
-	void discardDeviceResources();
-
-	void onPaint();
+	void onPaint() const;
 	void onResize(UINT width, UINT height) const;
+	void draw() const;
 
 
 public:
@@ -43,13 +26,6 @@ public:
 private:
 	HWND hWnd = nullptr;
 
-	ID2D1Factory* pDirect2DFactory = nullptr;
-	IDWriteFactory* pDirectWriteFactory = nullptr;
-	ID2D1DCRenderTarget* pRenderTarget = nullptr;
-
-	IDWriteTextFormat* pTextFormat = nullptr;
-
-	ID2D1SolidColorBrush* pBlackBrush = nullptr;
-	// ID2D1SolidColorBrush* pCornflowerBlueBrush = nullptr;
+	ULONG_PTR gdiToken = 0;
 };
 

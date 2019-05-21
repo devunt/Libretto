@@ -3,6 +3,7 @@
 #include <dwmapi.h>
 #pragma comment(lib, "dwmapi")
 
+using namespace Gdiplus;
 
 MainWindow* MainWindow::pMainWindow = nullptr;
 
@@ -14,14 +15,14 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 MainWindow::MainWindow()
 {
 	pMainWindow = this;
+
+	GdiplusStartupInput input;
+	GdiplusStartup(&this->gdiToken, &input, nullptr);
 }
 
 MainWindow::~MainWindow()
 {
-	safeRelease(&pDirect2DFactory);
-	safeRelease(&pDirectWriteFactory);
-	safeRelease(&pRenderTarget);
-	safeRelease(&this->pBlackBrush);
+	GdiplusShutdown(this->gdiToken);
 }
 
 int MainWindow::runMessageLoop()
@@ -58,16 +59,14 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void MainWindow::initialize(HINSTANCE hInstance)
 {
-
-	createDeviceIndependentResources();
-
 	WNDCLASSEX wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW; // CS_NOCLOSE
 	wc.lpfnWndProc = &WndProc;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wc.hbrBackground = CreateSolidBrush(RGB(255, 0, 0));
+	// wc.hbrBackground = nullptr;
+	wc.hbrBackground = CreateSolidBrush(RGB(0, 255, 0));
 	// wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
 	wc.lpszClassName = L"LibrettoMainWindow";
 	RegisterClassEx(&wc);
@@ -84,86 +83,65 @@ void MainWindow::initialize(HINSTANCE hInstance)
 		hInstance,
 		nullptr);
 
-	SetLayeredWindowAttributes(this->hWnd, RGB(255, 0, 0), 0, LWA_COLORKEY);
+	// SetLayeredWindowAttributes(this->hWnd, RGB(0, 255, 0), 0, LWA_COLORKEY);
 
-	MARGINS margins = { -1 };
-	DwmExtendFrameIntoClientArea(hWnd, &margins);
+	// MARGINS margins = { -5 };
+	// DwmExtendFrameIntoClientArea(hWnd, &margins);
 
 	ShowWindow(this->hWnd, SW_SHOWNORMAL);
 	UpdateWindow(this->hWnd);
+
+	this->draw();
 }
 
-void MainWindow::createDeviceIndependentResources()
+void MainWindow::draw() const
 {
-	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &this->pDirect2DFactory);
-	DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&this->pDirectWriteFactory));
-	this->pDirectWriteFactory->CreateTextFormat(
-		L"나눔고딕",
-		nullptr,
-		DWRITE_FONT_WEIGHT_BOLD,
-		DWRITE_FONT_STYLE_NORMAL,
-		DWRITE_FONT_STRETCH_NORMAL,
-		72.0f,
-		L"ko-kr",
-		&this->pTextFormat
-	);
-	this->pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-	this->pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-	this->pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+	const auto hdc = GetDC(this->hWnd);
+
+	const auto text = L"자 이제 떠나요 공항으로";
+
+	RECT rect;
+	GetWindowRect(this->hWnd, &rect);
+
+	const auto hMemDC = CreateCompatibleDC(hdc);
+	const auto hBitmap = CreateCompatibleBitmap(hdc, rect.right - rect.left, rect.bottom - rect.top);
+	const auto hOldBitmap = static_cast<HBITMAP>(SelectObject(hMemDC, hBitmap));
+
+	Graphics g(hMemDC);
+	g.SetSmoothingMode(SmoothingModeAntiAlias);
+	g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+	g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+
+	GraphicsPath path;
+
+	FontFamily fontFamily(L"나눔고딕");
+	StringFormat format;
+	format.SetAlignment(StringAlignmentNear);
+	format.SetLineAlignment(StringAlignmentCenter);
+	path.AddString(text, wcslen(text), &fontFamily, FontStyleBold, 24, Gdiplus::Point(10, 10), &format);
+
+	Pen penOutline(Color::Black, 6);
+	penOutline.SetLineJoin(LineJoinRound);
+	g.DrawPath(&penOutline, &path);
+
+	SolidBrush brushGlyph(Color::White);
+	g.FillPath(&brushGlyph, &path);
+
+	BLENDFUNCTION bf = { AC_SRC_OVER, NULL, 255, AC_SRC_ALPHA };
+	POINT pointZero = { 0, 0};
+	SIZE size = { rect.right - rect.left, rect.bottom - rect.top};
+	UpdateLayeredWindow(this->hWnd, hdc, nullptr, &size, hMemDC, &pointZero, 0, &bf, ULW_ALPHA);
+
+	SelectObject(hMemDC, hOldBitmap);
+	DeleteDC(hMemDC);
+	ReleaseDC(this->hWnd, hdc);
+	DeleteObject(hBitmap);
 }
 
-void MainWindow::createDeviceResources()
+void MainWindow::onPaint() const
 {
-	if (!this->pRenderTarget)
-	{
-		const auto renderTargetProperties = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
-		this->pDirect2DFactory->CreateDCRenderTarget(&renderTargetProperties, &this->pRenderTarget);
-		this->pRenderTarget->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_ALIASED);
-
-		this->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Yellow), &this->pBlackBrush);
-	}
-}
-
-void MainWindow::discardDeviceResources()
-{
-	safeRelease(&this->pRenderTarget);
-	safeRelease(&this->pBlackBrush);
-}
-
-void MainWindow::onPaint()
-{
-	PAINTSTRUCT ps;
-	BeginPaint(this->hWnd, &ps);
-
-	const auto text = L"배고프다";
-
-	RECT rc;
-	GetClientRect(this->hWnd, &rc);
-	/*const auto rect = D2D1::RectF(
-		static_cast<FLOAT>(rc.top),
-		static_cast<FLOAT>(rc.left),
-		static_cast<FLOAT>(rc.right - rc.left),
-		static_cast<FLOAT>(rc.bottom - rc.top)
-	);*/
-
-	this->createDeviceResources();
-
-	this->pRenderTarget->BindDC(ps.hdc, &rc);
-
-	this->pRenderTarget->BeginDraw();
-	// this->pRenderTarget->SetTransform(D2D1::IdentityMatrix());
-	// this->pRenderTarget->Clear(D2D1::ColorF(RGB(255, 0, 0)));
-	this->pRenderTarget->Clear(nullptr);
-	// this->pRenderTarget->DrawTextW(text, wcslen(text), this->pTextFormat, rect, this->pBlackBrush);
-	this->pRenderTarget->EndDraw();
-
-	EndPaint(this->hWnd, &ps);
 }
 
 void MainWindow::onResize(const UINT width, const UINT height) const
 {
-	if (this->pRenderTarget)
-	{
-		// this->pRenderTarget->Resize(D2D1::SizeU(width, height));
-	}
 }
