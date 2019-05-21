@@ -1,8 +1,20 @@
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include <Windows.h>
-#include <gdiplus.h>
-#pragma comment(lib, "gdiplus")
+
+#include "Melon.h"
+
+
+typedef struct _OverlayContent
+{
+	std::wstring line1;
+	std::wstring line2;
+	std::wstring line3;
+} OverlayContent;
+
 
 class MainWindow
 {
@@ -12,12 +24,12 @@ public:
 
 	void initialize(HINSTANCE hInstance);
 	int runMessageLoop();
+	void startBackgroundTasks();
 	LRESULT wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
-	void onPaint() const;
-	void onResize(UINT width, UINT height) const;
-	void draw() const;
+	void draw(const OverlayContent& content) const;
+	void pollMelon() const;
 
 
 public:
@@ -25,7 +37,10 @@ public:
 
 private:
 	HWND hWnd = nullptr;
-
 	ULONG_PTR gdiToken = 0;
+
+	const std::shared_ptr<Melon> melon = std::make_shared<Melon>();
+	LMetadata metadata = {};
+	std::vector<LBlock> blocks;
 };
 

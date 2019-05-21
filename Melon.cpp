@@ -1,4 +1,3 @@
-#include <memory>
 #include <iostream>
 
 #include <Windows.h>
@@ -50,8 +49,8 @@ bool Melon::setPid(const DWORD pid)
 	const auto timestampPointerAddr = patternSearcher->search(PATTERN_TIMESTAMP);
 	printf("metadataPointerAddr: %X, timestampPointerAddr: %X\n", metadataPointerAddr, timestampPointerAddr);
 
-	this->readProcessMemory(metadataPointerAddr, &this->metadataAddr, sizeof(DWORD));
-	this->readProcessMemory(timestampPointerAddr, &this->timestampAddr, sizeof(DWORD));
+	this->readMelonMemory(metadataPointerAddr, &this->metadataAddr, sizeof(DWORD));
+	this->readMelonMemory(timestampPointerAddr, &this->timestampAddr, sizeof(DWORD));
 	printf("metadataAddr: %X, timestampAddr: %X\n", metadataAddr, timestampAddr);
 
 	printf("\n");
@@ -59,14 +58,16 @@ bool Melon::setPid(const DWORD pid)
 	return true;
 }
 
-void Melon::getMetadata(LMetadata& metadata) const
+std::unique_ptr<LMetadata> Melon::getMetadata() const
 {
-	this->readProcessMemory(this->metadataAddr, &metadata, sizeof(LMetadata));
+	auto metadata = std::make_unique<LMetadata>();
+	this->readMelonMemory(this->metadataAddr, metadata.get(), sizeof(LMetadata));
+	return metadata;
 }
 
 std::vector<LBlock> Melon::getBlocks(const LMetadata& metadata) const
 {
-	auto blocks = std::vector<LBlock>();
+	std::vector<LBlock> blocks{};
 
 	if (metadata.blockPointer == 0)
 		return blocks;
@@ -74,7 +75,7 @@ std::vector<LBlock> Melon::getBlocks(const LMetadata& metadata) const
 	for (auto i = 0u; i < metadata.blockCount; i++)
 	{
 		LBlock block;
-		this->readProcessMemory(metadata.blockPointer + (i * sizeof(LBlock)), &block, sizeof(LBlock));
+		this->readMelonMemory(metadata.blockPointer + (i * sizeof(LBlock)), &block, sizeof(LBlock));
 		blocks.push_back(block);
 	}
 
@@ -84,11 +85,11 @@ std::vector<LBlock> Melon::getBlocks(const LMetadata& metadata) const
 int Melon::getTimestamp() const
 {
 	double n;
-	this->readProcessMemory(this->timestampAddr, &n, sizeof(double));
+	this->readMelonMemory(this->timestampAddr, &n, sizeof(double));
 	return static_cast<int>(n * 1000);
 }
 
-void Melon::readProcessMemory(const DWORD addr, const LPVOID buffer, const SIZE_T size) const
+void Melon::readMelonMemory(const DWORD addr, const LPVOID buffer, const SIZE_T size) const
 {
 	ReadProcessMemory(this->hProcess, reinterpret_cast<void*>(addr), buffer, size, nullptr);
 }

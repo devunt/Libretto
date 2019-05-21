@@ -11,15 +11,11 @@ int APIENTRY WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// CoInitialize(nullptr);
-
 	MainWindow mainWindow;
 	mainWindow.initialize(hInstance);
+	mainWindow.startBackgroundTasks();
 
-	const auto ret = mainWindow.runMessageLoop();
-
-	// CoUninitialize();
-	return ret;
+	return mainWindow.runMessageLoop();
 }
 
 int main()
@@ -30,14 +26,13 @@ int main()
 	const auto melon = std::make_unique<Melon>();
 	melon->setPid(pid);
 
-	LMetadata metadata;
-	melon->getMetadata(metadata);
-	printf("Magic: %s\n", metadata.magic);
-	printf("BlockPointer: %X\n", metadata.blockPointer);
-	printf("BlockCount: %d\n\n", metadata.blockCount);
+	const auto metadata = melon->getMetadata();
+	printf("Magic: %s\n", metadata->magic);
+	printf("BlockPointer: %X\n", metadata->blockPointer);
+	printf("BlockCount: %d\n\n", metadata->blockCount);
 
 	std::map<int, std::string> lyricMap;
-	const auto blocks = melon->getBlocks(metadata);
+	const auto blocks = melon->getBlocks(*metadata);
 	for (const auto &block : blocks)
 	{
 		char buf[512];

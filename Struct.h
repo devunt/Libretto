@@ -10,7 +10,7 @@ typedef struct _LBlock
 	uint16_t charCount;
 	uint16_t unk10; // 글자별로 싱크되는 가사일 경우(type 3) charCount + 1 값을 가지고 라인별로 싱크될 경우(type 1) 0 이 저장됨
 	uint8_t unk12[308];
-	char text[150];
+	wchar_t text[75];
 	uint8_t unk470[150];
 } LBlock;
 static_assert(sizeof(LBlock) == 620, "Invalid size");

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include <Windows.h>
@@ -14,7 +15,7 @@ public:
 	~Melon();
 
 	bool setPid(DWORD pid);
-	void getMetadata(LMetadata& metadata) const;
+	std::unique_ptr<LMetadata> getMetadata() const;
 	std::vector<LBlock> getBlocks(const LMetadata& metadata) const;
 	int getTimestamp() const;
 
@@ -28,5 +29,5 @@ private:
 	static const Pattern PATTERN_METADATA;
 	static const Pattern PATTERN_TIMESTAMP;
 
-	void readProcessMemory(DWORD addr, LPVOID buffer, SIZE_T size) const;
+	void readMelonMemory(DWORD addr, LPVOID buffer, SIZE_T size) const;
 };

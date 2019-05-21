@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <Windows.h>
-#undef min
 
 enum PatternOffsetType
 {
@@ -42,7 +41,7 @@ public:
 		uint8_t buf[CHUNK_SIZE];
 		for (auto readOffset = this->baseAddr; readOffset < endAddr; readOffset += CHUNK_SIZE)
 		{
-			const auto readSize = std::min(CHUNK_SIZE, endAddr - readOffset);
+			const auto readSize = (std::min)(CHUNK_SIZE, endAddr - readOffset);
 			ReadProcessMemory(this->hProcess, reinterpret_cast<void*>(readOffset), buf, readSize, nullptr);
 
 			for (auto offset = 0u; offset < readSize - patternSize; offset++)
