@@ -2,68 +2,24 @@
 #include <map>
 #include <memory>
 
+#include "MainWindow.h"
 #include "Melon.h"
 #include "Util.h"
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+int APIENTRY WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd )
 {
-	switch (message)
-	{
-	case WM_CHAR: //this is just for a program exit besides window's borders/task bar
-		if (wparam == VK_ESCAPE)
-		{
-			DestroyWindow(hwnd);
-		}
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-	default:
-		return DefWindowProc(hwnd, message, wparam, lparam);
-	}
-	return 0;
-}
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
-int main2()
-{
-	WNDCLASSEX wcex;
-	memset(&wcex, 0, sizeof(wcex));
-	wcex.cbSize = sizeof(wcex);
-	wcex.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = &WndProc;
-	wcex.hInstance = NULL;
-	wcex.hIconSm = NULL;
-	// wcex.hIcon = static_api_ptr_t<ui_control>()->get_main_icon();
-	wcex.hCursor = LoadCursor(0, IDC_ARROW);
-	wcex.hbrBackground = NULL;
-	wcex.lpszClassName = TEXT("UILyricWindow");
-	// wcex.cbWndExtra = sizeof(UIWnd*);
-	RegisterClassEx(&wcex);
+	CoInitialize(nullptr);
 
-	// HINSTANCE hInstance = {0, };
-	const auto m_hWnd = CreateWindowEx(
-		WS_EX_TOPMOST |
-		// WS_EX_TRANSPARENT |
-		// WS_EX_LAYERED |
-		WS_EX_TOOLWINDOW,
-		TEXT("UILyricWindow"),
-		TEXT("°¡»ç Ã¢"),
-		WS_POPUP | WS_SYSMENU | WS_MINIMIZEBOX | WS_THICKFRAME,
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		500, 200,
-		NULL,
-		0,
-		0,
-		NULL);
-	ShowWindow(m_hWnd, SW_NORMAL);
-	MSG messages;
-	while (GetMessage(&messages, NULL, 0, 0) > 0)
-	{
-		TranslateMessage(&messages);
-		DispatchMessage(&messages);
-	}
-	DeleteObject(m_hWnd); //doing it just in case
-	return messages.wParam;
-	return 0;
+	MainWindow mainWindow;
+	mainWindow.initialize(hInstance);
+
+	const auto ret = mainWindow.runMessageLoop();
+
+	CoUninitialize();
+	return ret;
 }
 
 int main()
