@@ -4,9 +4,11 @@
 #include <string>
 
 #include <Windows.h>
+#include <gdiplus.h>
 
 #include "Melon.h"
 
+using namespace Gdiplus;
 
 typedef struct _OverlayContent
 {
@@ -42,5 +44,10 @@ private:
 	const std::shared_ptr<Melon> melon = std::make_shared<Melon>();
 	LMetadata metadata = {};
 	std::vector<LBlock> blocks;
+
+	FontFamily fontFamily;
+	StringFormat* stringFormat;
+	SolidBrush *brushGlyphPrimary, *brushGlyphTrivial;
+	Pen *penOutlinePrimary, *penOutlineTrivial;
 };
 
