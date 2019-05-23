@@ -260,6 +260,10 @@ void MainWindow::draw(const OverlayContent& content) const
 	g.DrawPath(this->penOutlineTrivial, &pathTrivial);
 	g.FillPath(this->brushGlyphTrivial, &pathTrivial);
 
+	Pen pen(Color(255, 255, 0, 0), 1);
+	g.ResetTransform();
+	g.DrawRectangle(&pen, 0, 0, windowSize.cx - 1, windowSize.cy - 1);
+
 	POINT pointZero = { 0, 0 };
 	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
 	UpdateLayeredWindow(this->hWnd, hdc, windowPosition, &windowSize, hMemDC, &pointZero, 0, &bf, ULW_ALPHA);
