@@ -77,7 +77,8 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			const auto content = reinterpret_cast<OverlayContent*>(lParam);
 			this->draw(*content);
-			delete content;
+			if (wParam)
+				delete content;
 		}
 		return 0;
 	case WM_NCCALCSIZE:
@@ -128,21 +129,22 @@ void MainWindow::initialize(HINSTANCE hInstance)
 	ShowWindow(this->hWnd, SW_SHOWNORMAL);
 	UpdateWindow(this->hWnd);
 
-	OverlayContent content {
+	this->draw(this->contentPlaceholder);
+
+	/*
+	const OverlayContent content {
 		L"그저 친구라는 수많은 여자친구 right",
 		L"자 이제 떠나요 공항으로",
 		L"ONE",
 	};
 	this->draw(content);
+	*/
 }
 
-void MainWindow::startBackgroundTasks()
+void MainWindow::startBackgroundTasks() const
 {
-	const auto pid = Util::getProcessIdByName(L"melon.exe");
-	this->melon->setPid(pid);
-
-	std::thread check([&]() { this->pollMelon(); });
-	check.detach();
+	std::thread pollMelonThread([&]() { this->pollMelon(); });
+	pollMelonThread.detach();
 }
 
 void MainWindow::pollMelon() const
@@ -155,6 +157,19 @@ void MainWindow::pollMelon() const
 
 	while (true)
 	{
+		if (!this->melon->isActive())
+		{
+			this->requestDraw(this->contentPlaceholder);
+
+			const auto pid = Util::getProcessIdByName(L"melon.exe");
+			if (pid != 0)
+				this->melon->setPid(pid);
+
+			std::this_thread::sleep_for(1s);
+
+			continue;
+		}
+
 		auto metadata = this->melon->getMetadata();
 
 		if (currentMetadata == nullptr || currentMetadata->blockPointer != metadata->blockPointer)
@@ -190,7 +205,7 @@ void MainWindow::pollMelon() const
 					content->line1 = (--it)->second;
 			}
 
-			SendMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 0, reinterpret_cast<LPARAM>(content));
+			this->requestDraw(content);
 		}
 
 		std::this_thread::sleep_for(100ms);
@@ -226,7 +241,8 @@ void MainWindow::draw(const OverlayContent& content) const
 
 		windowPosition = new POINT { 
 			rect.left - ((windowSize.cx - (rect.right - rect.left)) / 2),
-			rect.top - ((windowSize.cy - (rect.bottom - rect.top)) / 2),
+			// rect.top - ((windowSize.cy - (rect.bottom - rect.top)) / 2),
+			rect.top,
 		};
 	}
 
@@ -256,3 +272,15 @@ void MainWindow::draw(const OverlayContent& content) const
 	DeleteDC(hMemDC);
 	ReleaseDC(this->hWnd, hdc);
 }
+
+void MainWindow::requestDraw(const OverlayContent& content) const
+{
+	SendMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 0, reinterpret_cast<LPARAM>(&content));
+}
+
+void MainWindow::requestDraw(const OverlayContent* content) const
+{
+	SendMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 1, reinterpret_cast<LPARAM>(content));
+}
+
+

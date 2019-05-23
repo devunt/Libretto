@@ -26,11 +26,13 @@ public:
 
 	void initialize(HINSTANCE hInstance);
 	int runMessageLoop();
-	void startBackgroundTasks();
+	void startBackgroundTasks() const;
 	LRESULT wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
 	void draw(const OverlayContent& content) const;
+	void requestDraw(const OverlayContent& content) const;
+	void requestDraw(const OverlayContent* content) const;
 	void pollMelon() const;
 
 
@@ -42,6 +44,12 @@ private:
 	ULONG_PTR gdiToken = 0;
 
 	bool isMoving = false;
+
+	const OverlayContent contentPlaceholder {
+		L"",
+		L"멜론 가사 오버레이 v0.1",
+		L"",
+	};
 
 	const std::shared_ptr<Melon> melon = std::make_shared<Melon>();
 	LMetadata metadata = {};

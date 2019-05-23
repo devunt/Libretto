@@ -58,6 +58,15 @@ bool Melon::setPid(const DWORD pid)
 	return true;
 }
 
+bool Melon::isActive() const
+{
+	if (this->hProcess == nullptr)
+		return false;
+
+	DWORD exitCode;
+	return GetExitCodeProcess(this->hProcess, &exitCode) && exitCode == STILL_ACTIVE;
+}
+
 std::unique_ptr<LMetadata> Melon::getMetadata() const
 {
 	auto metadata = std::make_unique<LMetadata>();

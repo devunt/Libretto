@@ -18,6 +18,7 @@ public:
 	std::unique_ptr<LMetadata> getMetadata() const;
 	std::vector<LBlock> getBlocks(const LMetadata& metadata) const;
 	int getTimestamp() const;
+	bool isActive() const;
 
 private:
 	HANDLE hProcess = nullptr;
