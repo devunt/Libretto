@@ -6,9 +6,9 @@
 typedef struct _LBlock
 {
 	uint32_t sequence;
-	uint32_t timestamp; // ¹Ğ¸®ÃÊ ´ÜÀ§ (¿¹: °î ½ÃÀÛ: 0, 30ÃÊ: 30000)
+	uint32_t timestamp; // ë°€ë¦¬ì´ˆ ë‹¨ìœ„ (ì˜ˆ: ê³¡ ì‹œì‘: 0, 30ì´ˆ: 30000)
 	uint16_t charCount;
-	uint16_t unk10; // ±ÛÀÚº°·Î ½ÌÅ©µÇ´Â °¡»çÀÏ °æ¿ì(type 3) charCount + 1 °ªÀ» °¡Áö°í ¶óÀÎº°·Î ½ÌÅ©µÉ °æ¿ì(type 1) 0 ÀÌ ÀúÀåµÊ
+	uint16_t unk10; // ê¸€ìë³„ë¡œ ì‹±í¬ë˜ëŠ” ê°€ì‚¬ì¼ ê²½ìš°(type 3) charCount + 1 ê°’ì„ ê°€ì§€ê³  ë¼ì¸ë³„ë¡œ ì‹±í¬ë  ê²½ìš°(type 1) 0 ì´ ì €ì¥ë¨
 	uint8_t unk12[308];
 	wchar_t text[75];
 	uint8_t unk470[150];
@@ -23,7 +23,7 @@ typedef struct _LMetadata
 	uint8_t unk5;
 	uint8_t unk6;
 	uint8_t pad7;
-	uint8_t length[4]; // uint32_t ÀÓ. endianness ¹Ù²ã¾ß ÇØ¼­ uint8_t[4] ·Î ÀúÀå...
+	uint8_t length[4]; // uint32_t ì„. endianness ë°”ê¿”ì•¼ í•´ì„œ uint8_t[4] ë¡œ ì €ì¥...
 	char xsyl[4]; // XSYL
 	uint32_t unk16;
 	uint16_t unk20;
@@ -31,7 +31,7 @@ typedef struct _LMetadata
 	uint8_t pad23;
 	char languageCode[3];
 	uint8_t pad27;
-	char plai[4]; // plai °¡ µé¾î°¨ (text/plain ¿¡¼­ ¾Õ 5±ÛÀÚ, µÚ 1±ÛÀÚ°¡ Àß¸²)
+	char plai[4]; // plai ê°€ ë“¤ì–´ê° (text/plain ì—ì„œ ì• 5ê¸€ì, ë’¤ 1ê¸€ìê°€ ì˜ë¦¼)
 	uint32_t blockCount;
 	uint32_t blockPointer;
 	uint8_t pad40[360];

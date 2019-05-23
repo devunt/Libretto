@@ -83,7 +83,10 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NCCALCSIZE:
 		return 0;
 	case WM_LBUTTONDOWN:
-		SendMessage(this->hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+		// if ((wParam & MK_CONTROL) > 0)
+		{
+			SendMessage(this->hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+		}
 		return 0;
 	case WM_ENTERSIZEMOVE:
 		this->isMoving = true;
@@ -126,8 +129,8 @@ void MainWindow::initialize(HINSTANCE hInstance)
 	UpdateWindow(this->hWnd);
 
 	OverlayContent content {
-		L"±×Àú Ä£±¸¶ó´Â ¼ö¸¹Àº ¿©ÀÚÄ£±¸ right",
-		L"ÀÚ ÀÌÁ¦ ¶°³ª¿ä °øÇ×À¸·Î",
+		L"ê·¸ì € ì¹œêµ¬ë¼ëŠ” ìˆ˜ë§ì€ ì—¬ìì¹œêµ¬ right",
+		L"ì ì´ì œ ë– ë‚˜ìš” ê³µí•­ìœ¼ë¡œ",
 		L"ONE",
 	};
 	this->draw(content);
@@ -174,7 +177,7 @@ void MainWindow::pollMelon() const
 
 			if (it == lyricMap.begin())
 			{
-				// ¾ÆÁ÷ Ã¹¹øÂ° °¡»ç ¾È ³ª¿È
+				// ì•„ì§ ì²«ë²ˆì§¸ ê°€ì‚¬ ì•ˆ ë‚˜ì˜´
 			}
 			else
 			{

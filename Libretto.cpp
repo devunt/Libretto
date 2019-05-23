@@ -48,7 +48,7 @@ int main()
 	auto it = lyricMap.upper_bound(timestamp);
 	if (it == lyricMap.begin())
 	{
-		// ¾ÆÁ÷ Ã¹¹øÂ° °¡»ç ¾È ³ª¿È
+		// ì•„ì§ ì²«ë²ˆì§¸ ê°€ì‚¬ ì•ˆ ë‚˜ì˜´
 	}
 	else
 	{
