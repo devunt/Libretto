@@ -28,7 +28,9 @@ MainWindow::MainWindow()
 	pfc.AddFontFile(L"NanumSquareEB.ttf");
 
 	auto _ = 0;
-	pfc.GetFamilies(1, &this->fontFamily, &_);
+	this->fontFamily = static_cast<FontFamily*>(malloc(sizeof(FontFamily)));
+	if (this->fontFamily)
+		pfc.GetFamilies(1, this->fontFamily, &_);
 
 	this->brushGlyphPrimary = new SolidBrush(Color(255, 255, 255, 255));
 	this->penOutlinePrimary = new Pen(Color(255, 0, 0, 0), 5);
@@ -50,6 +52,7 @@ MainWindow::~MainWindow()
 	delete this->brushGlyphTrivial;
 	delete this->penOutlineTrivial;
 	delete this->stringFormat;
+	free(this->fontFamily);
 	GdiplusShutdown(this->gdiToken);
 }
 
@@ -77,8 +80,16 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			delete content;
 		}
 		return 0;
+	case WM_NCCALCSIZE:
+		return 0;
 	case WM_LBUTTONDOWN:
 		SendMessage(this->hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+		return 0;
+	case WM_ENTERSIZEMOVE:
+		this->isMoving = true;
+		return 0;
+	case WM_EXITSIZEMOVE:
+		this->isMoving = false;
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -156,10 +167,10 @@ void MainWindow::pollMelon() const
 
 		const auto timestamp = melon->getTimestamp();
 		auto it = lyricMap.upper_bound(timestamp);
-		if (!currentIt.has_value() || it != *currentIt)
+		if (!currentIt.has_value() || it != currentIt)
 		{
 			const auto content = new OverlayContent;
-			*currentIt = it;
+			currentIt = it;
 
 			if (it == lyricMap.begin())
 			{
@@ -192,9 +203,9 @@ void MainWindow::draw(const OverlayContent& content) const
 
 	GraphicsPath pathPrimary, pathTrivial, pathMerged;
 
-	pathTrivial.AddString(content.line1.c_str(), content.line1.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, 0), this->stringFormat);
-	pathPrimary.AddString(content.line2.c_str(), content.line2.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, lineHeight + lineSpacing), this->stringFormat);
-	pathTrivial.AddString(content.line3.c_str(), content.line3.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, (lineHeight + lineSpacing) * 2), this->stringFormat);
+	pathTrivial.AddString(content.line1.c_str(), content.line1.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, 0), this->stringFormat);
+	pathPrimary.AddString(content.line2.c_str(), content.line2.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, lineHeight + lineSpacing), this->stringFormat);
+	pathTrivial.AddString(content.line3.c_str(), content.line3.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, (lineHeight + lineSpacing) * 2), this->stringFormat);
 
 	pathMerged.AddPath(&pathPrimary, false);
 	pathMerged.AddPath(&pathTrivial, false);
@@ -202,24 +213,30 @@ void MainWindow::draw(const OverlayContent& content) const
 	Rect bounds;
 	pathMerged.GetBounds(&bounds);
 
-	Matrix matrix;
-	matrix.Translate(static_cast<REAL>(-bounds.X + windowPadding), static_cast<REAL>(-bounds.Y + windowPadding));
-	pathMerged.Transform(&matrix);
-	pathPrimary.Transform(&matrix);
-	pathTrivial.Transform(&matrix);
+	SIZE windowSize = { bounds.Width + windowPadding * 2, bounds.Y + bounds.Height + windowPadding * 2 };
+	POINT* windowPosition = nullptr;
+	if (!this->isMoving)
+	{
+		// 가사창 들쭉날쭉 안 하도록 윈도우 중앙정렬 하는 코드
+		RECT rect;
+		GetWindowRect(this->hWnd, &rect);
 
-	pathMerged.GetBounds(&bounds);
+		windowPosition = new POINT { 
+			rect.left - ((windowSize.cx - (rect.right - rect.left)) / 2),
+			rect.top - ((windowSize.cy - (rect.bottom - rect.top)) / 2),
+		};
+	}
 
 	const auto hdc = GetDC(this->hWnd);
-
 	const auto hMemDC = CreateCompatibleDC(hdc);
-	const auto hBitmap = CreateCompatibleBitmap(hdc, bounds.Width + windowPadding * 2, bounds.Height + windowPadding * 2);
+	const auto hBitmap = CreateCompatibleBitmap(hdc, windowSize.cx, windowSize.cy);
 	const auto hOldBitmap = static_cast<HBITMAP>(SelectObject(hMemDC, hBitmap));
 
 	Graphics g(hMemDC);
 	g.SetSmoothingMode(SmoothingModeAntiAlias);
 	g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-	g.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+
+	g.TranslateTransform(static_cast<REAL>(-bounds.X + windowPadding), static_cast<REAL>(windowPadding));
 
 	g.DrawPath(this->penOutlinePrimary, &pathPrimary);
 	g.FillPath(this->brushGlyphPrimary, &pathPrimary);
@@ -227,13 +244,12 @@ void MainWindow::draw(const OverlayContent& content) const
 	g.DrawPath(this->penOutlineTrivial, &pathTrivial);
 	g.FillPath(this->brushGlyphTrivial, &pathTrivial);
 
-	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
 	POINT pointZero = { 0, 0 };
-	SIZE size = { bounds.Width + windowPadding * 2, bounds.Height + windowPadding * 2 };
-	UpdateLayeredWindow(this->hWnd, hdc, nullptr, &size, hMemDC, &pointZero, 0, &bf, ULW_ALPHA);
+	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+	UpdateLayeredWindow(this->hWnd, hdc, windowPosition, &windowSize, hMemDC, &pointZero, 0, &bf, ULW_ALPHA);
 
 	SelectObject(hMemDC, hOldBitmap);
+	DeleteObject(hBitmap);
 	DeleteDC(hMemDC);
 	ReleaseDC(this->hWnd, hdc);
-	DeleteObject(hBitmap);
 }

@@ -41,11 +41,13 @@ private:
 	HWND hWnd = nullptr;
 	ULONG_PTR gdiToken = 0;
 
+	bool isMoving = false;
+
 	const std::shared_ptr<Melon> melon = std::make_shared<Melon>();
 	LMetadata metadata = {};
 	std::vector<LBlock> blocks;
 
-	FontFamily fontFamily;
+	FontFamily* fontFamily;
 	StringFormat* stringFormat;
 	SolidBrush *brushGlyphPrimary, *brushGlyphTrivial;
 	Pen *penOutlinePrimary, *penOutlineTrivial;
