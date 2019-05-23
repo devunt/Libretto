@@ -15,10 +15,11 @@ public:
 	~Melon();
 
 	bool setPid(DWORD pid);
-	std::unique_ptr<LMetadata> getMetadata() const;
-	std::vector<LBlock> getBlocks(const LMetadata& metadata) const;
-	int getTimestamp() const;
 	bool isActive() const;
+
+	[[nodiscard]] std::unique_ptr<LMetadata> getMetadata() const;
+	[[nodiscard]] std::vector<LBlock> getBlocks(const LMetadata& metadata) const;
+	[[nodiscard]] int getTimestamp() const;
 
 private:
 	HANDLE hProcess = nullptr;

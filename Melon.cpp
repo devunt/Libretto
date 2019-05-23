@@ -35,11 +35,11 @@ bool Melon::setPid(const DWORD pid)
 {
 	this->hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
 	this->hModule = Util::getModuleHandleByName(pid, L"SMLFDLL.dll");
-	printf("hProcess: %p, hModule: %p\n", this->hProcess, this->hModule);
+	// printf("hProcess: %p, hModule: %p\n", this->hProcess, this->hModule);
 
 	MODULEINFO modInfo;
 	GetModuleInformation(this->hProcess, this->hModule, &modInfo, sizeof(modInfo));
-	printf("BaseAddress: %p, Size: %lu\n", modInfo.lpBaseOfDll, modInfo.SizeOfImage);
+	// printf("BaseAddress: %p, Size: %lu\n", modInfo.lpBaseOfDll, modInfo.SizeOfImage);
 
 	const auto patternSearcher = std::make_unique<PatternSearcher>();
 	patternSearcher->setHandle(this->hProcess);
@@ -47,13 +47,13 @@ bool Melon::setPid(const DWORD pid)
 
 	const auto metadataPointerAddr = patternSearcher->search(PATTERN_METADATA);
 	const auto timestampPointerAddr = patternSearcher->search(PATTERN_TIMESTAMP);
-	printf("metadataPointerAddr: %X, timestampPointerAddr: %X\n", metadataPointerAddr, timestampPointerAddr);
+	// printf("metadataPointerAddr: %X, timestampPointerAddr: %X\n", metadataPointerAddr, timestampPointerAddr);
 
 	this->readMelonMemory(metadataPointerAddr, &this->metadataAddr, sizeof(DWORD));
 	this->readMelonMemory(timestampPointerAddr, &this->timestampAddr, sizeof(DWORD));
-	printf("metadataAddr: %X, timestampAddr: %X\n", metadataAddr, timestampAddr);
+	// printf("metadataAddr: %X, timestampAddr: %X\n", metadataAddr, timestampAddr);
 
-	printf("\n");
+	// printf("\n");
 
 	return true;
 }
