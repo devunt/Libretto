@@ -28,9 +28,7 @@ MainWindow::MainWindow()
 	pfc.AddFontFile(L"NanumSquareEB.ttf");
 
 	auto _ = 0;
-	this->fontFamily = static_cast<FontFamily*>(malloc(sizeof(FontFamily)));
-	if (this->fontFamily)
-		pfc.GetFamilies(1, this->fontFamily, &_);
+	pfc.GetFamilies(1, &this->fontFamily, &_);
 
 	this->brushGlyphPrimary = new SolidBrush(Color(255, 255, 255, 255));
 	this->penOutlinePrimary = new Pen(Color(255, 0, 0, 0), 5);
@@ -47,12 +45,11 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+	delete this->stringFormat;
 	delete this->brushGlyphPrimary;
 	delete this->penOutlinePrimary;
 	delete this->brushGlyphTrivial;
 	delete this->penOutlineTrivial;
-	delete this->stringFormat;
-	free(this->fontFamily);
 	GdiplusShutdown(this->gdiToken);
 }
 
@@ -221,9 +218,9 @@ void MainWindow::draw(const OverlayContent& content) const
 
 	GraphicsPath pathPrimary, pathTrivial, pathMerged;
 
-	pathTrivial.AddString(content.line1.c_str(), content.line1.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, 0), this->stringFormat);
-	pathPrimary.AddString(content.line2.c_str(), content.line2.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, lineHeight + lineSpacing), this->stringFormat);
-	pathTrivial.AddString(content.line3.c_str(), content.line3.length(), this->fontFamily, FontStyleRegular, fontSize, Point(0, (lineHeight + lineSpacing) * 2), this->stringFormat);
+	pathTrivial.AddString(content.line1.c_str(), content.line1.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, 0), this->stringFormat);
+	pathPrimary.AddString(content.line2.c_str(), content.line2.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, lineHeight + lineSpacing), this->stringFormat);
+	pathTrivial.AddString(content.line3.c_str(), content.line3.length(), &this->fontFamily, FontStyleRegular, fontSize, Point(0, (lineHeight + lineSpacing) * 2), this->stringFormat);
 
 	pathMerged.AddPath(&pathPrimary, false);
 	pathMerged.AddPath(&pathTrivial, false);

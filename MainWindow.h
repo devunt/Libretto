@@ -52,11 +52,9 @@ private:
 	};
 
 	const std::shared_ptr<Melon> melon = std::make_shared<Melon>();
-	LMetadata metadata = {};
-	std::vector<LBlock> blocks;
 
-	FontFamily* fontFamily;
-	StringFormat* stringFormat;
+	FontFamily fontFamily;
+	StringFormat *stringFormat;
 	SolidBrush *brushGlyphPrimary, *brushGlyphTrivial;
 	Pen *penOutlinePrimary, *penOutlineTrivial;
 };
