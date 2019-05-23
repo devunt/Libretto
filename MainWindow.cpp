@@ -41,6 +41,12 @@ MainWindow::MainWindow()
 	this->stringFormat = new StringFormat();
 	this->stringFormat->SetAlignment(StringAlignmentCenter);
 	this->stringFormat->SetLineAlignment(StringAlignmentNear);
+
+#if !NDEBUG
+	AllocConsole();
+	FILE* fp;
+	freopen_s(&fp, "CONOUT$", "w", stdout);
+#endif
 }
 
 MainWindow::~MainWindow()
@@ -260,9 +266,11 @@ void MainWindow::draw(const OverlayContent& content) const
 	g.DrawPath(this->penOutlineTrivial, &pathTrivial);
 	g.FillPath(this->brushGlyphTrivial, &pathTrivial);
 
+#if !NDEBUG
 	Pen pen(Color(255, 255, 0, 0), 1);
 	g.ResetTransform();
 	g.DrawRectangle(&pen, 0, 0, windowSize.cx - 1, windowSize.cy - 1);
+#endif
 
 	POINT pointZero = { 0, 0 };
 	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
