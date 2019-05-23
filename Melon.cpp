@@ -37,16 +37,17 @@ bool Melon::setPid(const DWORD pid)
 	this->hModule = Util::getModuleHandleByName(pid, L"SMLFDLL.dll");
 	// printf("hProcess: %p, hModule: %p\n", this->hProcess, this->hModule);
 
+	/*
 	MODULEINFO modInfo;
 	GetModuleInformation(this->hProcess, this->hModule, &modInfo, sizeof(modInfo));
 	// printf("BaseAddress: %p, Size: %lu\n", modInfo.lpBaseOfDll, modInfo.SizeOfImage);
 
-	const auto patternSearcher = std::make_unique<PatternSearcher>();
-	patternSearcher->setHandle(this->hProcess);
-	patternSearcher->setRegion(reinterpret_cast<DWORD>(modInfo.lpBaseOfDll), modInfo.SizeOfImage);
+	PatternSearcher patternSearcher;
+	patternSearcher.setHandle(this->hProcess);
+	patternSearcher.setRegion(reinterpret_cast<DWORD>(modInfo.lpBaseOfDll), modInfo.SizeOfImage);
 
-	const auto metadataPointerAddr = patternSearcher->search(PATTERN_METADATA);
-	const auto timestampPointerAddr = patternSearcher->search(PATTERN_TIMESTAMP);
+	const auto metadataPointerAddr = patternSearcher.search(PATTERN_METADATA);
+	const auto timestampPointerAddr = patternSearcher.search(PATTERN_TIMESTAMP);
 	// printf("metadataPointerAddr: %X, timestampPointerAddr: %X\n", metadataPointerAddr, timestampPointerAddr);
 
 	this->readMelonMemory(metadataPointerAddr, &this->metadataAddr, sizeof(DWORD));
@@ -54,6 +55,13 @@ bool Melon::setPid(const DWORD pid)
 	// printf("metadataAddr: %X, timestampAddr: %X\n", metadataAddr, timestampAddr);
 
 	// printf("\n");
+	*/
+
+	const auto baseAddr = reinterpret_cast<DWORD>(this->hModule);
+	this->metadataAddr = baseAddr + 0x19058;
+	this->timestampAddr = baseAddr + 0x191F8;
+	this->titleAndArtistAddr = baseAddr + 0x19458;
+	this->albumAddr = baseAddr + 0x1945C;
 
 	return true;
 }
@@ -96,6 +104,40 @@ int Melon::getTimestamp() const
 	double n;
 	this->readMelonMemory(this->timestampAddr, &n, sizeof(double));
 	return static_cast<int>(n * 1000);
+}
+
+std::wstring Melon::getTitleAndArtist() const
+{
+	DWORD addr;
+	this->readMelonMemory(this->titleAndArtistAddr, &addr, sizeof(DWORD));
+
+	std::vector<wchar_t> v;
+	wchar_t c;
+	do
+	{
+		this->readMelonMemory(addr, &c, sizeof(wchar_t));
+		v.push_back(c);
+		addr += sizeof(wchar_t);
+	} while (c > 0);
+
+	return std::wstring(v.data());
+}
+
+std::wstring Melon::getAlbum() const
+{
+	DWORD addr;
+	this->readMelonMemory(this->albumAddr, &addr, sizeof(DWORD));
+
+	std::vector<wchar_t> v;
+	wchar_t c;
+	do
+	{
+		this->readMelonMemory(addr, &c, sizeof(wchar_t));
+		v.push_back(c);
+		addr += sizeof(wchar_t);
+	} while (c > 0);
+
+	return std::wstring(v.data());
 }
 
 void Melon::readMelonMemory(const DWORD addr, const LPVOID buffer, const SIZE_T size) const

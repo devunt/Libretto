@@ -136,7 +136,7 @@ void MainWindow::initialize(HINSTANCE hInstance)
 
 	/*
 	const OverlayContent content {
-		L"그저 친구라는 수많은 여자친구 right",
+		L"그저 친구라는 수많은 여자친구",
 		L"자 이제 떠나요 공항으로",
 		L"ONE",
 	};
@@ -195,7 +195,8 @@ void MainWindow::pollMelon() const
 
 			if (it == lyricMap.begin())
 			{
-				// 아직 첫번째 가사 안 나옴
+				content->line2 = this->melon->getTitleAndArtist();
+				content->line3 = this->melon->getAlbum();
 			}
 			else
 			{

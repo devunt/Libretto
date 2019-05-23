@@ -20,6 +20,8 @@ public:
 	[[nodiscard]] std::unique_ptr<LMetadata> getMetadata() const;
 	[[nodiscard]] std::vector<LBlock> getBlocks(const LMetadata& metadata) const;
 	[[nodiscard]] int getTimestamp() const;
+	[[nodiscard]] std::wstring getTitleAndArtist() const;
+	[[nodiscard]] std::wstring getAlbum() const;
 
 private:
 	HANDLE hProcess = nullptr;
@@ -27,6 +29,8 @@ private:
 
 	DWORD metadataAddr = 0;
 	DWORD timestampAddr = 0;
+	DWORD titleAndArtistAddr = 0;
+	DWORD albumAddr = 0;
 
 	static const Pattern PATTERN_METADATA;
 	static const Pattern PATTERN_TIMESTAMP;
