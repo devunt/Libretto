@@ -97,6 +97,11 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_EXITSIZEMOVE:
 		this->isMoving = false;
+
+		RECT rect;
+		GetWindowRect(this->hWnd, &rect);
+		WritePrivateProfileStruct(L"Startup", L"position", &rect, sizeof(rect), L".\\Libretto.ini");
+
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -108,6 +113,9 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void MainWindow::initialize(HINSTANCE hInstance)
 {
+	RECT rect { 500, 500 };
+	GetPrivateProfileStruct(L"Startup", L"position", &rect, sizeof(rect), L".\\Libretto.ini");
+
 	WNDCLASSEX wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -122,8 +130,8 @@ void MainWindow::initialize(HINSTANCE hInstance)
 		L"LibrettoMainWindow",
 		L"LibrettoMainWindowTitle",
 		WS_POPUP,
-		500, 500,
-		1, 1,
+		rect.left, rect.top,
+		rect.right - rect.left, rect.bottom - rect.top,
 		nullptr,
 		nullptr,
 		hInstance,
