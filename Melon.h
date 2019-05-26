@@ -15,7 +15,7 @@ public:
 	~Melon();
 
 	bool setPid(DWORD pid);
-	bool isActive() const;
+	[[nodiscard]] bool isActive() const;
 
 	[[nodiscard]] std::unique_ptr<LMetadata> getMetadata() const;
 	[[nodiscard]] std::vector<LBlock> getBlocks(const LMetadata& metadata) const;

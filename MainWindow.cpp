@@ -165,12 +165,17 @@ void MainWindow::pollMelon() const
 	std::map<int, std::wstring> lyricMap;
 	std::unique_ptr<LMetadata> currentMetadata;
 	std::optional<std::map<int, std::wstring>::iterator> currentIt = std::nullopt;
+	auto currentlyActive = false;
 
 	while (true)
 	{
 		if (!this->melon->isActive())
 		{
-			this->requestDraw(this->contentPlaceholder);
+			if (currentlyActive)
+			{
+				currentlyActive = false;
+				this->requestDraw(this->contentPlaceholder);
+			}
 
 			const auto pid = Util::getProcessIdByName(L"melon.exe");
 			if (pid != 0)
@@ -180,6 +185,8 @@ void MainWindow::pollMelon() const
 
 			continue;
 		}
+
+		currentlyActive = true;
 
 		auto metadata = this->melon->getMetadata();
 
