@@ -113,7 +113,7 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void MainWindow::initialize(HINSTANCE hInstance)
 {
-	RECT rect { 500, 500 };
+	RECT rect{ 500, 500, 501, 501 };
 	GetPrivateProfileStruct(L"Startup", L"position", &rect, sizeof(rect), L".\\Libretto.ini");
 
 	WNDCLASSEX wc = {};
