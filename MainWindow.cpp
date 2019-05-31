@@ -174,6 +174,11 @@ void MainWindow::pollMelon() const
 			if (currentlyActive)
 			{
 				currentlyActive = false;
+
+				lyricMap.clear();
+				currentMetadata.reset();
+				currentIt.reset();
+
 				this->requestDraw(this->contentPlaceholder);
 			}
 

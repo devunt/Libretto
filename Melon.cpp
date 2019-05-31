@@ -35,6 +35,13 @@ bool Melon::setPid(const DWORD pid)
 {
 	this->hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
 	this->hModule = Util::getModuleHandleByName(pid, L"SMLFDLL.dll");
+
+	if (this->hModule == nullptr)
+	{
+		CloseHandle(this->hProcess);
+		return false;
+	}
+
 	// printf("hProcess: %p, hModule: %p\n", this->hProcess, this->hModule);
 
 	/*
