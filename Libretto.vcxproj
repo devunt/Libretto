@@ -98,6 +98,7 @@
   <ItemGroup>
     <ClInclude Include="Melon.h" />
     <ClInclude Include="Pattern.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Struct.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="MainWindow.h" />
@@ -106,6 +107,12 @@
     <CopyFileToFolders Include="NanumSquareEB.ttf">
       <DeploymentContent>true</DeploymentContent>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Libretto.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="app.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

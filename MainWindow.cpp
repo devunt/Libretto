@@ -3,10 +3,16 @@
 #include <map>
 #include <thread>
 #include <optional>
+#include <strsafe.h>
 
+#include "resource.h"
 #include "Util.h"
 
 constexpr int WM_APP_LIBRETTO_DRAW = (WM_APP + 1);
+constexpr int WM_APP_LIBRETTO_NOTIFICATION_ICON = (WM_APP + 2);
+constexpr int NOTIFICATION_ICON_ID = 1;
+constexpr int CONTEXT_MENU_ABOUT = 1;
+constexpr int CONTEXT_MENU_CLOSE = 2;
 
 using namespace Gdiplus;
 
@@ -56,7 +62,8 @@ MainWindow::~MainWindow()
 	delete this->penOutlinePrimary;
 	delete this->brushGlyphTrivial;
 	delete this->penOutlineTrivial;
-	GdiplusShutdown(this->gdiToken);
+
+	// GdiplusShutdown(this->gdiToken);
 }
 
 int MainWindow::runMessageLoop()
@@ -84,17 +91,40 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				delete content;
 		}
 		return 0;
-	case WM_NCCALCSIZE:
-		return 0;
-	case WM_LBUTTONDOWN:
-		// if ((wParam & MK_CONTROL) > 0)
+
+	case WM_APP_LIBRETTO_NOTIFICATION_ICON:
+		if (lParam == WM_LBUTTONDOWN || lParam == WM_RBUTTONDOWN)
 		{
-			SendMessage(this->hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+			this->showContextMenu();
 		}
 		return 0;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case CONTEXT_MENU_ABOUT:
+			wchar_t buf[256];
+			swprintf_s(buf, L"[Libretto]\n\nVersion: %s\nWebsite: https://github.com/devunt/Libretto", LIBRETTO_VERSION);
+			MessageBox(this->hWnd, buf, L"Libretto", MB_OK | MB_ICONINFORMATION | MB_SYSTEMMODAL);
+			break;
+		case CONTEXT_MENU_CLOSE:
+			this->close();
+			break;
+		}
+		return 0;
+
+	case WM_NCCALCSIZE:
+		return 0;
+
+	case WM_LBUTTONDOWN:
+		// if ((wParam & MK_CONTROL) > 0)
+		SendMessage(this->hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+		return 0;
+
 	case WM_ENTERSIZEMOVE:
 		this->isMoving = true;
 		return 0;
+
 	case WM_EXITSIZEMOVE:
 		this->isMoving = false;
 
@@ -103,15 +133,17 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		WritePrivateProfileStruct(L"Startup", L"position", &rect, sizeof(rect), L".\\Libretto.ini");
 
 		return 0;
+
 	case WM_DESTROY:
-		PostQuitMessage(0);
+		this->close();
 		return 0;
+
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 }
 
-void MainWindow::initialize(HINSTANCE hInstance)
+void MainWindow::initialize(const HINSTANCE hInstance)
 {
 	RECT rect{ 500, 500, 501, 501 };
 	GetPrivateProfileStruct(L"Startup", L"position", &rect, sizeof(rect), L".\\Libretto.ini");
@@ -142,6 +174,16 @@ void MainWindow::initialize(HINSTANCE hInstance)
 
 	this->draw(this->contentPlaceholder);
 
+	ZeroMemory(&this->nid, sizeof(NOTIFYICONDATA));
+	this->nid.cbSize = sizeof(NOTIFYICONDATA);
+	this->nid.hWnd = this->hWnd;
+	this->nid.uID = NOTIFICATION_ICON_ID;
+	this->nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+	this->nid.uCallbackMessage = WM_APP_LIBRETTO_NOTIFICATION_ICON;
+	this->nid.hIcon = static_cast<HICON>(LoadImage(hInstance, MAKEINTRESOURCE(IDI_ICON_APP), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADTRANSPARENT));
+	StringCchCopy(this->nid.szTip, 128, L"Libretto");
+	Shell_NotifyIcon(NIM_ADD, &this->nid);
+
 	/*
 	const OverlayContent content {
 		L"그저 친구라는 수많은 여자친구",
@@ -156,6 +198,28 @@ void MainWindow::startBackgroundTasks() const
 {
 	std::thread pollMelonThread([&]() { this->pollMelon(); });
 	pollMelonThread.detach();
+}
+
+void MainWindow::close()
+{
+	Shell_NotifyIcon(NIM_DELETE, &this->nid);
+	PostQuitMessage(0);
+}
+
+void MainWindow::showContextMenu() const
+{
+	const auto hMenu = CreatePopupMenu();
+	AppendMenu(hMenu, MF_STRING, CONTEXT_MENU_ABOUT, L"정보");
+	AppendMenu(hMenu, MF_STRING, CONTEXT_MENU_CLOSE, L"닫기");
+
+	POINT pt;
+	GetCursorPos(&pt);
+
+	SetForegroundWindow(this->hWnd);
+	TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, this->hWnd, nullptr);
+	PostMessage(this->hWnd, WM_NULL, 0, 0);
+
+	DestroyMenu(hMenu);
 }
 
 void MainWindow::pollMelon() const
@@ -305,12 +369,12 @@ void MainWindow::draw(const OverlayContent& content) const
 
 void MainWindow::requestDraw(const OverlayContent& content) const
 {
-	SendMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 0, reinterpret_cast<LPARAM>(&content));
+	PostMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 0, reinterpret_cast<LPARAM>(&content));
 }
 
 void MainWindow::requestDraw(const OverlayContent* content) const
 {
-	SendMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 1, reinterpret_cast<LPARAM>(content));
+	PostMessage(this->hWnd, WM_APP_LIBRETTO_DRAW, 1, reinterpret_cast<LPARAM>(content));
 }
 
 

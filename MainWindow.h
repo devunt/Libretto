@@ -10,13 +10,14 @@
 
 using namespace Gdiplus;
 
+constexpr auto LIBRETTO_VERSION = L"v0.1";
+
 typedef struct _OverlayContent
 {
 	std::wstring line1;
 	std::wstring line2;
 	std::wstring line3;
 } OverlayContent;
-
 
 class MainWindow
 {
@@ -30,10 +31,12 @@ public:
 	LRESULT wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
+	void close();
 	void draw(const OverlayContent& content) const;
 	void requestDraw(const OverlayContent& content) const;
 	void requestDraw(const OverlayContent* content) const;
 	void pollMelon() const;
+	void showContextMenu() const;
 
 
 public:
@@ -42,12 +45,13 @@ public:
 private:
 	HWND hWnd = nullptr;
 	ULONG_PTR gdiToken = 0;
+	NOTIFYICONDATA nid = {};
 
 	bool isMoving = false;
 
 	const OverlayContent contentPlaceholder {
 		L"",
-		L"멜론 가사 오버레이 v0.1",
+		L"Libretto lyrics overlay",
 		L"",
 	};
 
