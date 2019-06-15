@@ -3,6 +3,7 @@ A Lyrics overlay viewer
 
 ## Screenshots
 ![](https://i.imgur.com/CGXembn.gif)
+![](https://i.imgur.com/bmHR2Kw.png)
 
 ## Supported platforms
 - Melon PC Player
